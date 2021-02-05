@@ -37,14 +37,23 @@ jobs:
             - name: Setting the TEST_CLIENT_SECRET for installing private package
               run: sed -i 's/TEST_CLIENT_SECRET=.*/TEST_CLIENT_SECRET=${{ secrets.TEST_CLIENT_SECRET }}/g' .env
 
+            - name: Remove TEST_TESTING_ROUTE for installing private package
+              run: sed -i '/TEST_TESTING_ROUTE=.*/d' .env
+
             - name: Setting the TEST_TESTING_ROUTE for installing private package
-              run: sed -i 's/TEST_TESTING_ROUTE=.*/TEST_TESTING_ROUTE=${{ secrets.TEST_TESTING_ROUTE }}/g' .env
+              run: echo TEST_TESTING_ROUTE=${{ secrets.TEST_TESTING_ROUTE }} >> .env
+
+            - name: Remove TEST_BASEURL for installing private package
+              run: sed -i '/TEST_BASEURL=.*/d' .env
 
             - name: Setting the TEST_BASEURL for installing private package
-              run: sed -i 's/TEST_BASEURL=.*/TEST_BASEURL=${{ secrets.TEST_BASEURL }}/g' .env
+              run: echo TEST_BASEURL=${{ secrets.TEST_BASEURL }} >> .env
+
+            - name: Remove TEST_AUTH_TOKEN for installing private package
+              run: sed -i '/TEST_AUTH_TOKEN=.*/d' .env
 
             - name: Setting the TEST_AUTH_TOKEN for installing private package
-              run: sed -i 's/TEST_AUTH_TOKEN=.*/TEST_AUTH_TOKEN=${{ secrets.TEST_AUTH_TOKEN }}/g' .env
+              run: echo TEST_AUTH_TOKEN=${{ secrets.TEST_AUTH_TOKEN }} >> .env
 
             - name: Setting the TEST_GRANT_TYPE for installing private package
               run: sed -i 's/TEST_GRANT_TYPE=.*/TEST_GRANT_TYPE=${{ secrets.TEST_GRANT_TYPE }}/g' .env

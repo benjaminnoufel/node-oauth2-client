@@ -17,6 +17,9 @@ jobs:
       - name: Setting up the environment
         run: cp .env.example .env
 
+      - name: Setting the development environment
+        run: sed -i 's/production/development/' .env
+
       - name: Cleanup the project
         run: make clean
 
