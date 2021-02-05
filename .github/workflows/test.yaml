@@ -1,0 +1,59 @@
+name: Test CI
+
+on:
+    push:
+        branches:
+            - next
+            - latest
+
+    pull_request:
+        branches:
+            - next
+
+jobs:
+    test:
+        name: Check if the unit tests are successfull
+        runs-on: ubuntu-latest
+
+        steps:
+            - name: Checkout the project
+              uses: actions/checkout@v2
+
+            - name: Setting up the environment
+              run: cp .env.example .env
+
+            - name: Setting the development environment
+              run: sed -i 's/production/development/' .env
+
+            - name: Cleanup the project
+              run: make clean
+
+            - name: Setting the token for installing private package
+              run: sed -i 's/NPM_AUTH_TOKEN=.*/NPM_AUTH_TOKEN=${{ secrets.NPM_AUTH_TOKEN }}/g' .env
+
+            - name: Setting the TEST_CLIENT_ID for installing private package
+              run: sed -i 's/TEST_CLIENT_ID=.*/TEST_CLIENT_ID=${{ secrets.TEST_CLIENT_ID }}/g' .env
+
+            - name: Setting the TEST_CLIENT_SECRET for installing private package
+              run: sed -i 's/TEST_CLIENT_SECRET=.*/TEST_CLIENT_SECRET=${{ secrets.TEST_CLIENT_SECRET }}/g' .env
+
+            - name: Setting the TEST_TESTING_ROUTE for installing private package
+              run: sed -i 's/TEST_TESTING_ROUTE=.*/TEST_TESTING_ROUTE=${{ secrets.TEST_TESTING_ROUTE }}/g' .env
+
+            - name: Setting the TEST_BASEURL for installing private package
+              run: sed -i 's/TEST_BASEURL=.*/TEST_BASEURL=${{ secrets.TEST_BASEURL }}/g' .env
+
+            - name: Setting the TEST_AUTH_TOKEN for installing private package
+              run: sed -i 's/TEST_AUTH_TOKEN=.*/TEST_AUTH_TOKEN=${{ secrets.TEST_AUTH_TOKEN }}/g' .env
+
+            - name: Setting the TEST_GRANT_TYPE for installing private package
+              run: sed -i 's/TEST_GRANT_TYPE=.*/TEST_GRANT_TYPE=${{ secrets.TEST_GRANT_TYPE }}/g' .env
+
+            - name: Setup the NPM running configuration for using the authentication token
+              run: make token
+
+            - name: Install the Node.js dependencies
+              run: make install
+
+            - name: Check if all unit tests pass
+              run: make test

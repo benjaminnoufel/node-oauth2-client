@@ -1,0 +1,59 @@
+{
+    "env": {
+      "es6": true,
+      "node": true,
+      "jest": true
+    },
+    "parser": "@typescript-eslint/parser",
+    "parserOptions": {
+        "ecmaVersion": 2018,
+        "sourceType": "module"
+    },
+    "extends": [
+        "@benjaminnoufel/eslint-config-javascript"
+    ],
+    "overrides": [
+        {
+            "files": ["*.ts"],
+            "extends": "@benjaminnoufel/eslint-config-typescript",
+            "parserOptions": {
+                "project": "tsconfig.json"
+            },
+            "rules": {
+                "@typescript-eslint/explicit-member-accessibility": "off",
+                "@typescript-eslint/no-type-alias": "off",
+                "@typescript-eslint/no-unnecessary-condition": "off",
+                "@typescript-eslint/member-ordering": "off"
+            }
+        },
+        {
+            "files": ["*.spec.ts"],
+            "extends": [
+                "@benjaminnoufel/eslint-config-typescript",
+                "plugin:jest/all"
+            ],
+            "parserOptions": {
+                "project": "test.tsconfig.json"
+            },
+            "rules": {
+                "jest/no-conditional-expect": "off"
+            }
+        },
+        {
+            "files": ["*.json"],
+            "extends": "plugin:json/recommended",
+            "rules": {
+                "json/*": ["error"]
+            }
+        }
+    ],
+    "globals": {
+        "Atomics": "readonly",
+        "SharedArrayBuffer": "readonly"
+    },
+    "rules": {
+        "camelcase": "off",
+        "no-invalid-this": "off",
+        "sort-keys": "off"
+    }
+}

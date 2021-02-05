@@ -1,0 +1,11 @@
+/.idea/
+/node_modules/
+/coverage/
+/dist
+/.env
+/.cache
+/.yarnrc
+/.npmrc
+/yarn-error.log
+/.yarn
+/index.js
