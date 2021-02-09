@@ -3,25 +3,6 @@ import axios, {AxiosError, AxiosInstance, AxiosResponse} from "axios";
 
 type GrantType = "client_credentials" | "authorization_code" | "refresh_token";
 
-interface OAuth2 {
-    setBaseUrl: (baseUrl: string) => this;
-    setTokenUrl: (tokenUrl: string) => this;
-    setCode: (code: string) => this;
-    setScope: (scope: string) => this;
-    setClientId: (clientId: string) => this;
-    setClientSecret: (clientSecret: string) => this;
-    setRedirectUri: (redirectUri: string) => this;
-    setGrantType: (grantType: GrantType) => this;
-    setHeader: (property: string, value: string) => this;
-    setAuthHeader: (property: string, value: string) => this;
-    setData: (property: string, value: string) => this;
-    auth: () => Promise<Error | void>;
-    get: <T>(url: string) => Promise<AxiosResponse<T>>;
-    post: <T, D>(url: string, body: D) => Promise<AxiosResponse<T>>;
-    patch: <T, D>(url: string, body: D) => Promise<AxiosResponse<T>>;
-    delete: <T>(url: string) => Promise<AxiosResponse<T>>;
-}
-
 interface A {
     [key: string]: string;
 }
@@ -36,7 +17,7 @@ interface OAuth2Request extends Partial<A> {
     refresh_token?: string;
 }
 
-interface AuthorizeAccessInformation {
+export interface AuthorizeAccessInformation {
     access_token: string;
     token_type: string;
     expires_in: number;
@@ -44,6 +25,26 @@ interface AuthorizeAccessInformation {
     scope: string;
     created_at: number;
     expires_at: number;
+}
+
+interface OAuth2 {
+    getCredential: () => AuthorizeAccessInformation | undefined;
+    setBaseUrl: (baseUrl: string) => this;
+    setTokenUrl: (tokenUrl: string) => this;
+    setCode: (code: string) => this;
+    setScope: (scope: string) => this;
+    setClientId: (clientId: string) => this;
+    setClientSecret: (clientSecret: string) => this;
+    setRedirectUri: (redirectUri: string) => this;
+    setGrantType: (grantType: GrantType) => this;
+    setHeader: (property: string, value: string) => this;
+    setAuthHeader: (property: string, value: string) => this;
+    setData: (property: string, value: string) => this;
+    auth: () => Promise<this>;
+    get: <T>(url: string) => Promise<AxiosResponse<T>>;
+    post: <T, D>(url: string, body: D) => Promise<AxiosResponse<T>>;
+    patch: <T, D>(url: string, body: D) => Promise<AxiosResponse<T>>;
+    delete: <T>(url: string) => Promise<AxiosResponse<T>>;
 }
 
 const sleep = (wait: number): Promise<void> => new Promise(resolve => setTimeout(() => resolve(), wait * 1000));
@@ -67,7 +68,7 @@ class OAuth2Api implements OAuth2 {
 
     #redirectUri?: string;
 
-    #autorizeAccess?: AuthorizeAccessInformation;
+    #credential?: AuthorizeAccessInformation;
 
     #headers?: Record<string, string> = {};
 
@@ -77,7 +78,7 @@ class OAuth2Api implements OAuth2 {
 
 
     /**
-     * private method
+     * @private method
      * set request data
      * @returns {OAuth2Request}
      */
@@ -101,7 +102,7 @@ class OAuth2Api implements OAuth2 {
                 redirect_uri: this.#redirectUri
             };
         }
-        if (this.#autorizeAccess && this.#autorizeAccess.refresh_token && "string" === typeof this.#refreshToken && "refresh_token" === this.#grantType) {
+        if (this.#credential && this.#credential.refresh_token && "string" === typeof this.#refreshToken && "refresh_token" === this.#grantType) {
             dataRequest = {
                 ...dataRequest,
                 refresh_token: this.#refreshToken
@@ -117,7 +118,7 @@ class OAuth2Api implements OAuth2 {
     };
 
     /**
-     * private method
+     * @private method
      * Create own config for axios
      * @returns {AxiosInstance}
      */
@@ -125,13 +126,17 @@ class OAuth2Api implements OAuth2 {
         if ("string" !== typeof this.#baseUrl) {
             throw new TypeError("baseUrl must be set");
         }
-        if ("undefined" === typeof this.#autorizeAccess) {
-            throw new TypeError("You must be auth on API with auth() method");
+        let headers = {};
+        if ("undefined" !== typeof this.#credential && "undefined" !== typeof this.#credential.access_token) {
+            headers = {
+                ...headers,
+                Authorization: `Bearer ${this.#credential.access_token}`
+            };
         }
         const instance = axios.create({
             baseURL: this.#baseUrl,
             headers: {
-                Authorization: `${this.#autorizeAccess.token_type} ${this.#autorizeAccess.access_token}`,
+                ...headers,
                 ...this.#headers
             }
         });
@@ -140,7 +145,7 @@ class OAuth2Api implements OAuth2 {
     };
 
     /**
-     * private method
+     * @private method
      * set Authorize Access
      * @param {AuthorizeAccessInformation} accessToken
      */
@@ -148,34 +153,33 @@ class OAuth2Api implements OAuth2 {
         if ("undefined" === typeof accessToken) {
             throw new TypeError("accessToken can not be undefined");
         }
-        this.#autorizeAccess = {
+        this.#credential = {
             ...accessToken,
             expires_at: accessToken.expires_in + accessToken.created_at
         };
-        if ("authorization_code" === this.#grantType && "undefined" !== typeof this.#autorizeAccess.refresh_token) {
-            this.setRefreshToken(this.#autorizeAccess.refresh_token);
+        if ("authorization_code" === this.#grantType && "undefined" !== typeof this.#credential.refresh_token) {
+            this.setRefreshToken(this.#credential.refresh_token);
         }
     };
 
     /**
-     * private method
+     * @private method
      * refresh token data
      * @returns {Promise<void>}
      */
     #refreshTokenAccess = async (): Promise<void> => {
-        if ("undefined" === typeof this.#autorizeAccess) {
-            throw new Error("You must be auth on API with auth() method");
-        }
-        if (Math.round(new Date().getTime() / 1000) >= this.#autorizeAccess.expires_at) {
-            await this.auth();
-        } else if ("authorization_code" === this.#grantType && "undefined" !== this.#autorizeAccess.refresh_token) {
-            this.setGrantType("refresh_token");
-            await this.auth();
+        if ("undefined" !== typeof this.#credential) {
+            if (Math.round(new Date().getTime() / 1000) >= this.#credential.expires_at) {
+                await this.auth();
+            } else if ("authorization_code" === this.#grantType && "undefined" !== this.#credential.refresh_token) {
+                this.setGrantType("refresh_token");
+                await this.auth();
+            }
         }
     };
 
     /**
-     * public method
+     * @public method
      * set request data
      * @param {string} property
      * @param {string} value
@@ -197,7 +201,7 @@ class OAuth2Api implements OAuth2 {
     };
 
     /**
-     * public method
+     * @public method
      * set header
      * @param {string} property
      * @param {string} value
@@ -218,7 +222,7 @@ class OAuth2Api implements OAuth2 {
     };
 
     /**
-     * public method
+     * @public method
      * set Auth header
      * @param {string} property
      * @param {string} value
@@ -239,7 +243,14 @@ class OAuth2Api implements OAuth2 {
     };
 
     /**
-     * public method
+     * @public method
+     * get credential token and information
+     * @returns {AuthorizeAccessInformation | undefined}
+     */
+    public getCredential = (): AuthorizeAccessInformation | undefined => this.#credential;
+
+    /**
+     * @public method
      * set refreshToken
      * @param {string} refreshToken
      * @returns {this}
@@ -253,7 +264,7 @@ class OAuth2Api implements OAuth2 {
     }
 
     /**
-     * public method
+     * @public method
      * set base url
      * @param {string} baseUrl
      * @returns {this}
@@ -267,7 +278,7 @@ class OAuth2Api implements OAuth2 {
     }
 
     /**
-     * public method
+     * @public method
      * set token url
      * @param {string} tokenUrl
      * @returns {this}
@@ -281,7 +292,7 @@ class OAuth2Api implements OAuth2 {
     }
 
     /**
-     * public method
+     * @public method
      * set code
      * @param {string} code
      * @returns {this}
@@ -295,7 +306,7 @@ class OAuth2Api implements OAuth2 {
     }
 
     /**
-     * public method
+     * @public method
      * set scope
      * @param {string} scope
      * @returns {this}
@@ -309,7 +320,7 @@ class OAuth2Api implements OAuth2 {
     }
 
     /**
-     * public method
+     * @public method
      * set client id
      * @param {string} clientId
      * @returns {this}
@@ -323,7 +334,7 @@ class OAuth2Api implements OAuth2 {
     }
 
     /**
-     * public method
+     * @public method
      * set client secret
      * @param {string} clientSecret
      * @returns {this}
@@ -337,7 +348,7 @@ class OAuth2Api implements OAuth2 {
     }
 
     /**
-     * public method
+     * @public method
      * set redirect url
      * @param {string} redirectUri
      * @returns {this}
@@ -351,7 +362,7 @@ class OAuth2Api implements OAuth2 {
     }
 
     /**
-     * public method
+     * @public method
      * set grant type
      * @param {GrantType} grantType
      * @returns {this}
@@ -365,12 +376,12 @@ class OAuth2Api implements OAuth2 {
     }
 
     /**
-     * public method
+     * @public method
      * Oauth2 authentification request
      * Auth method
-     * @returns {Promise<Error | void>}
+     * @returns {Promise<this>}
      */
-    public auth = async (): Promise<Error | void> => {
+    public auth = async (): Promise<this> => {
         try {
             if ("string" !== typeof this.#baseUrl) {
                 throw new TypeError("baseUrl must be set");
@@ -398,7 +409,7 @@ class OAuth2Api implements OAuth2 {
                 throw new Error(data.data.error_description);
             }
             this.#setAuthorizeAccess(data.data);
-            return;
+            return this;
         } catch (e) {
             const axiosError = e as unknown as AxiosError;
             if (axiosError.isAxiosError) {
@@ -409,7 +420,7 @@ class OAuth2Api implements OAuth2 {
                         await sleep(Number(axiosError.response.headers["retry-after"]));
                     }
                     await this.auth();
-                    return;
+                    return this;
                 }
             }
             const error = e as unknown as Error;
@@ -418,7 +429,7 @@ class OAuth2Api implements OAuth2 {
     };
 
     /**
-     * public method
+     * @public method
      * get method
      * @param {string} url
      * @returns {Promise<AxiosResponse<T>>}
@@ -449,7 +460,7 @@ class OAuth2Api implements OAuth2 {
     };
 
     /**
-     * public method
+     * @public method
      * Post method
      * @param {string} url
      * @param {D} body
@@ -481,7 +492,7 @@ class OAuth2Api implements OAuth2 {
     };
 
     /**
-     * public method
+     * @public method
      * Patch method
      * @param {string} url
      * @param {D} body
@@ -513,7 +524,7 @@ class OAuth2Api implements OAuth2 {
     };
 
     /**
-     * public method
+     * @public method
      * Delete method
      * @param {string} url
      * @returns {Promise<AxiosResponse<T>>}
