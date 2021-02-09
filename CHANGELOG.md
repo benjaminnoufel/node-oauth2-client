@@ -10,12 +10,12 @@
 
 ### Major changes
 
-- [x] The auth method return itself
+- [x] The auth method return itself ([#4](https://github.com/benjaminnoufel/node-oauth2-client/pull/4)).
 
 ### Minor changes
 
-- [x] Having a getCredential method.
-- [x] Adding more examples
+- [x] Having a getCredential method ([#4](https://github.com/benjaminnoufel/node-oauth2-client/pull/4)).
+- [x] Adding more examples ([#4](https://github.com/benjaminnoufel/node-oauth2-client/pull/4)).
 
 ### Bug & security fixes
 
