@@ -1,12 +1,33 @@
 {
     "name": "@benjaminnoufel/node-oauth2-client",
-    "version": "0.1.0",
-    "description": "Use an node oauth2 client on javascript or typescript.",
+    "version": "0.2.0",
+    "description": "Use a node oauth2 client on javascript or typescript.",
     "license": "MIT",
     "main": "./dist/index.js",
     "types": "./dist/index.d.ts",
     "files": [
         "dist"
+    ],
+    "author": {
+        "name": "Benjamin Noufel",
+        "url": "https://github.com/benjaminnoufel"
+    },
+    "bugs": {
+        "url": "https://github.com/benjaminnoufel/node-oauth2-client/issues"
+    },
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/benjaminnoufel/node-oauth2-client.git"
+    },
+    "homepage": "https://github.com/benjaminnoufel/node-oauth2-client#readme",
+    "keywords": [
+        "javascript",
+        "typescript",
+        "oauth2",
+        "node",
+        "node-oauth2",
+        "node oauth2",
+        "node oauth2 client"
     ],
     "scripts": {
         "build": "rollup --config rollup.config.js",
