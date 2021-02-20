@@ -3,7 +3,7 @@ name: Package
 on:
   push:
     branches:
-      - next
+      - latest
 
 jobs:
   package:

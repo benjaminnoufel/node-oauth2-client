@@ -169,9 +169,12 @@ class OAuth2Api implements OAuth2 {
      */
     #refreshTokenAccess = async (): Promise<void> => {
         if ("undefined" !== typeof this.#credential) {
-            if (Math.round(new Date().getTime() / 1000) >= this.#credential.expires_at) {
+            if ("authorization_code" !== this.#grantType && Math.round(new Date().getTime() / 1000) >= this.#credential.expires_at) {
                 await this.auth();
-            } else if ("authorization_code" === this.#grantType && "undefined" !== this.#credential.refresh_token) {
+            } else if (
+                "authorization_code" === this.#grantType
+                && "undefined" !== this.#credential.refresh_token
+                && 180 >= Math.round(new Date().getTime() / 1000) - this.#credential.expires_at) {
                 this.setGrantType("refresh_token");
                 await this.auth();
             }

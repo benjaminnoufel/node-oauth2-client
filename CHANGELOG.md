@@ -2,9 +2,27 @@
 
 ## Versions
 
+- [`0.3.0`](#030)
 - [`0.2.0`](#020)
+- [`0.1.0`](#010)
 
-## 0.1.0
+## 0.3.0
+
+*2021-02-20*
+
+### Major changes
+
+None.
+
+### Minor changes
+
+None.
+
+### Bug & security fixes
+
+- [x] Fix a major bug with refresh token
+
+## 0.2.0
 
 *2021-02-05*
 
@@ -20,8 +38,6 @@
 ### Bug & security fixes
 
 None.
-
-- [`0.1.0`](#010)
 
 ## 0.1.0
 

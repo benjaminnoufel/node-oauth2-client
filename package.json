@@ -1,6 +1,6 @@
 {
     "name": "@benjaminnoufel/node-oauth2-client",
-    "version": "0.2.0",
+    "version": "0.3.0",
     "description": "Use a node oauth2 client on javascript or typescript.",
     "license": "MIT",
     "main": "./dist/index.js",

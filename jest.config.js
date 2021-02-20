@@ -7,5 +7,6 @@ module.exports = {
     ],
     modulePathIgnorePatterns: ["./.cache/*"],
     preset: "ts-jest",
-    testEnvironment: "node"
+    testEnvironment: "node",
+    testTimeout: 30000
 };
